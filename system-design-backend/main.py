@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from .routes.health_routes import router as health_router
+from fastapi.middleware.cors import CORSMiddleware
+from v1.v1 import router as v1_router
 
 app = FastAPI()
 
@@ -11,5 +12,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health_router, tags=["Health"])
-
+app.include_router(v1_router)
