@@ -9,11 +9,21 @@ from v1.services.database_service import db_service
 from v1.services.idempotency_service import idempotency_service
 from v1.models.request import Request
 from v1.services.observability import logger, log_request
+from v1.services.rate_limiting_service import rate_limiting_service
 
 router = APIRouter(prefix="/requests")
 
 @router.post("/")
 def post_request(request_body: PostRequestModel, request: FastAPIRequest):
+    request_uuid = str(uuid.uuid4())
+    logger.info("request_started", request_id=request_uuid, idempotency_key=idempotency_key)
+    
+    if rate_limiting_service.is_allowed(request_uuid) == False:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded"
+        )
+
     start_time = time.time()
     
     headers = request.headers   
@@ -32,9 +42,6 @@ def post_request(request_body: PostRequestModel, request: FastAPIRequest):
     db_response = idempotency_service.get_database_response(idempotency_key)
     if db_response:
         return PostResponseModel(**db_response)
-    
-    request_uuid = str(uuid.uuid4())
-    logger.info("request_started", request_id=request_uuid, idempotency_key=idempotency_key)
     
     payload_str = json.dumps(request_body.dict(), sort_keys=True)
     payload_hash = hashlib.sha256(payload_str.encode()).hexdigest()

@@ -5,8 +5,7 @@ import os
 import logging
 from v1.models.request import Request
 import time
-
-logger = logging.getLogger(__name__)
+from v1.services.observability import logger
 
 T = TypeVar('T')
 

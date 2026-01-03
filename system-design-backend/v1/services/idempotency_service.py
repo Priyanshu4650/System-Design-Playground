@@ -7,6 +7,7 @@ class IdempotencyService:
     def __init__(self):
         self.redis = redis_service
         self.db = db_service
+        logger.info("Idempotency service initialised")
     
     def get_cached_response(self, idempotency_key: str) -> Optional[Dict[str, Any]]:
         """Check Redis cache for existing response"""
