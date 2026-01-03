@@ -3,6 +3,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from typing import TypeVar, Type, List, Optional
 import os
 import logging
+from v1.models.request import Request
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -14,23 +16,30 @@ class DatabaseService:
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.init_db()
         logger.info("Database initialized")
+
+    def _simulate_testing(self, testing: bool = True, sleep_time: int = 2) :
+        if testing :
+            time.sleep(sleep_time)
     
     def get_session(self) -> Session:
         return self.SessionLocal()
     
     def query(self, model_class: Type[T], session: Optional[Session] = None) -> List[T]:
+        self._simulate_testing(1)
         if session:
             return session.query(model_class).all()
         with self.get_session() as db:
             return db.query(model_class).all()
     
     def get_by_id(self, model_class: Type[T], id: int, session: Optional[Session] = None) -> Optional[T]:
+        self._simulate_testing(1.5)
         if session:
             return session.query(model_class).filter(model_class.id == id).first()
         with self.get_session() as db:
             return db.query(model_class).filter(model_class.id == id).first()
     
     def create(self, obj: T, session: Optional[Session] = None) -> T:
+        self._simulate_testing(0.75)
         if session:
             session.add(obj)
             session.commit()
@@ -43,6 +52,7 @@ class DatabaseService:
             return obj
     
     def update(self, obj: T, session: Optional[Session] = None) -> T:
+        self._simulate_testing()
         if session:
             session.merge(obj)
             session.commit()
@@ -53,6 +63,7 @@ class DatabaseService:
             return obj
     
     def delete(self, model_class: Type[T], id: int, session: Optional[Session] = None) -> bool:
+        self._simulate_testing(1)
         if session:
             obj = session.query(model_class).filter(model_class.id == id).first()
             if obj:
@@ -81,6 +92,13 @@ class DatabaseService:
                 if not result.scalar():
                     conn.execute(text(schema_sql))
                     conn.commit()
+                
+    def get_by_idempotency_key(self, idempotency_key: str, session: Optional[Session] = None) -> Optional[Request]:
+        if session:
+            return session.query(Request).filter(Request.idempotency_key == idempotency_key).first()
+        with self.get_session() as db:
+            return db.query(Request).filter(Request.idempotency_key == idempotency_key).first()
+
 
             
 db_service = DatabaseService(
