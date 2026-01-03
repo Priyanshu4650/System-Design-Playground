@@ -5,3 +5,4 @@ venv/
 .venv/
 instance/
 .pytest_cache/
+logs.txt

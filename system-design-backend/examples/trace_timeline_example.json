@@ -1,0 +1,108 @@
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "total_events": 12,
+  "total_latency_ms": 1247.5,
+  "status_code": 200,
+  "timeline": [
+    {
+      "timestamp": "2024-01-15T10:30:00.123Z",
+      "event_type": "request_received",
+      "metadata": {
+        "method": "POST",
+        "url": "/v1/requests",
+        "client_ip": "192.168.1.100",
+        "idempotency_key": "unique-key-123"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.125Z",
+      "event_type": "validation_passed",
+      "metadata": {
+        "validation": "idempotency_key"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.127Z",
+      "event_type": "rate_limit_check",
+      "metadata": {
+        "client_id": "client-abc",
+        "max_requests": 100,
+        "window_type": "fixed"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.130Z",
+      "event_type": "cache_miss",
+      "metadata": {
+        "key": "unique-key-123"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.135Z",
+      "event_type": "db_call_started",
+      "metadata": {
+        "operation": "get_by_idempotency_key"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.245Z",
+      "event_type": "db_call_completed",
+      "metadata": {
+        "operation": "get_by_idempotency_key",
+        "latency_ms": 110.2,
+        "success": true
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:00.250Z",
+      "event_type": "db_call_started",
+      "metadata": {
+        "operation": "create"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:01.150Z",
+      "event_type": "failure_injected",
+      "metadata": {
+        "operation": "db_create",
+        "failure_rate": 0.1
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:01.155Z",
+      "event_type": "retry_attempted",
+      "metadata": {
+        "attempt": 1,
+        "delay_seconds": 0.2,
+        "error": "Injected failure in db_create",
+        "error_type": "InjectedFailureException"
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:01.360Z",
+      "event_type": "db_call_completed",
+      "metadata": {
+        "operation": "create",
+        "latency_ms": 1110.5,
+        "success": true,
+        "retry_count": 1
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:01.365Z",
+      "event_type": "response_sent",
+      "metadata": {
+        "status_code": 200,
+        "latency_ms": 1247.5
+      }
+    },
+    {
+      "timestamp": "2024-01-15T10:30:01.370Z",
+      "event_type": "request_completed",
+      "metadata": {
+        "total_latency_ms": 1247.5,
+        "success": true
+      }
+    }
+  ]
+}

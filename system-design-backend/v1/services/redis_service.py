@@ -5,8 +5,14 @@ from v1.services.observability import logger
 
 class RedisService():
     def __init__(self):
-        self.r = redis.Redis(host='localhost', port=6379, db=0)
-        logger.info("redis_service_initialized")
+        try:
+            self.r = redis.Redis(host='localhost', port=6379, db=0)
+            # Test connection
+            self.r.ping()
+            logger.info("redis service initialized", host="localhost", port=6379, db=0)
+        except Exception as e:
+            logger.error("redis connection failed", error=str(e))
+            raise
 
     def hash_key(self, key):
         return hashlib.sha256(key.encode()).hexdigest()

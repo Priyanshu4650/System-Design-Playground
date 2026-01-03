@@ -4,27 +4,22 @@ from typing import TypeVar, Type, List, Optional
 import os
 from v1.models.request import Request
 from v1.services.observability import logger
-from middleware.failure_injection import inject_db_latency, inject_random_failure, with_timeout
-from middleware.retry import with_retry
-from exceptions.retryable import RetryableException, DatabaseTimeoutException
-from config.failure_injection import config
+from tracing.trace_decorators import trace_operation
+from models.tracing.trace_models import EventType
 
 T = TypeVar('T')
 
-class DatabaseService:
+class DatabaseServiceWithTracing:
     def __init__(self, host: str, password: str, database: str, username: str, port: int = 5432):
         self.engine = create_engine(f"postgresql://{username}:{password}@{host}:{port}/{database}")
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.init_db()
-        logger.info("Database initialized")
+        logger.info("Database initialized with tracing")
     
     def get_session(self) -> Session:
         return self.SessionLocal()
     
-    @with_retry((RetryableException,))
-    @with_timeout(config.DB_TIMEOUT_SECONDS, DatabaseTimeoutException)
-    @inject_random_failure("db_create")
-    @inject_db_latency()
+    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "create"})
     def create(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
         if session:
             session.add(obj)
@@ -37,30 +32,21 @@ class DatabaseService:
             db.refresh(obj)
             return obj
     
-    @with_retry((RetryableException,))
-    @with_timeout(config.DB_TIMEOUT_SECONDS, DatabaseTimeoutException)
-    @inject_random_failure("db_get_by_idempotency")
-    @inject_db_latency()
+    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "get_by_idempotency_key"})
     def get_by_idempotency_key(self, idempotency_key: str, request_id: str = None, session: Optional[Session] = None) -> Optional[Request]:
         if session:
             return session.query(Request).filter(Request.idempotency_key == idempotency_key).first()
         with self.get_session() as db:
             return db.query(Request).filter(Request.idempotency_key == idempotency_key).first()
     
-    @with_retry((RetryableException,))
-    @with_timeout(config.DB_TIMEOUT_SECONDS, DatabaseTimeoutException)
-    @inject_random_failure("db_query")
-    @inject_db_latency()
+    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "query"})
     def query(self, model_class: Type[T], request_id: str = None, session: Optional[Session] = None) -> List[T]:
         if session:
             return session.query(model_class).all()
         with self.get_session() as db:
             return db.query(model_class).all()
     
-    @with_retry((RetryableException,))
-    @with_timeout(config.DB_TIMEOUT_SECONDS, DatabaseTimeoutException)
-    @inject_random_failure("db_update")
-    @inject_db_latency()
+    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "update"})
     def update(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
         if session:
             session.merge(obj)
@@ -85,7 +71,7 @@ class DatabaseService:
                     conn.execute(text(schema_sql))
                     conn.commit()
 
-db_service = DatabaseService(
+db_service_traced = DatabaseServiceWithTracing(
     host="localhost",
     password="password",
     username="postgres",
