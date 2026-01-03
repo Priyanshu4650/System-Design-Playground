@@ -16,29 +16,29 @@ class DatabaseService:
         self.init_db()
         logger.info("Database initialized")
 
-    def _simulate_testing(self, testing: bool = True, sleep_time: int = 2) :
-        if testing :
+    def _simulate_testing(self, testing: bool = True, sleep_time: float = 2.0):
+        if testing:
             time.sleep(sleep_time)
     
     def get_session(self) -> Session:
         return self.SessionLocal()
     
-    def query(self, model_class: Type[T], session: Optional[Session] = None) -> List[T]:
-        self._simulate_testing(1)
+    def query(self, model_class: Type[T], db_latency_ms: int = 2000, session: Optional[Session] = None) -> List[T]:
+        self._simulate_testing(True, db_latency_ms / 1000.0) 
         if session:
             return session.query(model_class).all()
         with self.get_session() as db:
             return db.query(model_class).all()
     
-    def get_by_id(self, model_class: Type[T], id: int, session: Optional[Session] = None) -> Optional[T]:
-        self._simulate_testing(1.5)
+    def get_by_id(self, model_class: Type[T], id: int, db_latency_ms: int = 2000, session: Optional[Session] = None) -> Optional[T]:
+        self._simulate_testing(True, db_latency_ms / 1000.0) 
         if session:
             return session.query(model_class).filter(model_class.id == id).first()
         with self.get_session() as db:
             return db.query(model_class).filter(model_class.id == id).first()
     
-    def create(self, obj: T, session: Optional[Session] = None) -> T:
-        self._simulate_testing(0.75)
+    def create(self, obj: T, db_latency_ms: int = 2000, session: Optional[Session] = None) -> T:
+        self._simulate_testing(True, db_latency_ms / 1000.0) 
         if session:
             session.add(obj)
             session.commit()
@@ -50,8 +50,8 @@ class DatabaseService:
             db.refresh(obj)
             return obj
     
-    def update(self, obj: T, session: Optional[Session] = None) -> T:
-        self._simulate_testing()
+    def update(self, obj: T, db_latency_ms: int = 2000, session: Optional[Session] = None) -> T:
+        self._simulate_testing(True, db_latency_ms / 1000.0)
         if session:
             session.merge(obj)
             session.commit()
@@ -61,8 +61,8 @@ class DatabaseService:
             db.commit()
             return obj
     
-    def delete(self, model_class: Type[T], id: int, session: Optional[Session] = None) -> bool:
-        self._simulate_testing(1)
+    def delete(self, model_class: Type[T], id: int, db_latency_ms: int = 2000, session: Optional[Session] = None) -> bool:
+        self._simulate_testing(True, db_latency_ms / 1000.0) 
         if session:
             obj = session.query(model_class).filter(model_class.id == id).first()
             if obj:
@@ -92,7 +92,8 @@ class DatabaseService:
                     conn.execute(text(schema_sql))
                     conn.commit()
                 
-    def get_by_idempotency_key(self, idempotency_key: str, session: Optional[Session] = None) -> Optional[Request]:
+    def get_by_idempotency_key(self, idempotency_key: str, db_latency_ms: int = 2000, session: Optional[Session] = None) -> Optional[Request]:
+        self._simulate_testing(True, db_latency_ms / 1000.0) 
         if session:
             return session.query(Request).filter(Request.idempotency_key == idempotency_key).first()
         with self.get_session() as db:

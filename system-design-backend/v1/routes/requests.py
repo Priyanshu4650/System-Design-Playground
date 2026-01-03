@@ -9,21 +9,13 @@ from v1.services.database_service import db_service
 from v1.services.idempotency_service import idempotency_service
 from v1.models.request import Request
 from v1.services.observability import logger, log_request
-from v1.services.rate_limiting_service import rate_limiting_service
+from v1.services.rate_limiting_service import rate_limiting_service, WindowType
 
 router = APIRouter(prefix="/requests")
 
 @router.post("/")
 def post_request(request_body: PostRequestModel, request: FastAPIRequest):
     request_uuid = str(uuid.uuid4())
-    logger.info("request_started", request_id=request_uuid, idempotency_key=idempotency_key)
-    
-    if rate_limiting_service.is_allowed(request_uuid) == False:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Rate limit exceeded"
-        )
-
     start_time = time.time()
     
     headers = request.headers   
@@ -35,8 +27,27 @@ def post_request(request_body: PostRequestModel, request: FastAPIRequest):
 
     idempotency_key = headers["Idempotency-Key"]
     
+    client_id = headers.get("X-Client-ID", "default")
+    window_type = WindowType.SLIDING if request_body.rate_limiting_algo == "sliding_window" else WindowType.FIXED
+    
+    if not rate_limiting_service.is_allowed(
+        client_id=client_id,
+        max_requests=request_body.rate_limiting,
+        time_window=60, 
+        window_type=window_type
+    ):
+        duration = time.time() - start_time
+        log_request(request_uuid, str(request.url.path), request.method, 429, duration)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded"
+        )
+    
     cached_response = idempotency_service.get_cached_response(idempotency_key)
+    if cached_response is None :
+        logger.info("cache not enabled or cache miss")
     if cached_response:
+        logger.info("cache hit", request_id=request_uuid)
         return PostResponseModel(**cached_response)
     
     db_response = idempotency_service.get_database_response(idempotency_key)

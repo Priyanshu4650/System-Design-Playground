@@ -38,4 +38,10 @@ def log_request(request_id: str, endpoint: str, method: str, status_code: int, d
         duration=duration
     )
 
+RATE_LIMIT_EXCEEDED = Counter('rate_limit_exceeded_total', 'Rate limit exceeded', ['client_id', 'window_type'])
+
+def log_rate_limit_exceeded(client_id: str, window_type: str):
+    RATE_LIMIT_EXCEEDED.labels(client_id=client_id, window_type=window_type).inc()
+    logger.warning("rate_limit_exceeded", client_id=client_id, window_type=window_type)
+
 start_http_server(8001)
