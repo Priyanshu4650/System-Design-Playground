@@ -82,5 +82,21 @@ class DatabaseServiceWithTracing:
                 for statement in statements:
                     conn.execute(text(statement))
                 conn.commit()
+        
+        # Initialize visit tracking schema
+        visit_schema_path = os.path.join(os.path.dirname(__file__), '../../visit_tracking_schema.sql')
+        if os.path.exists(visit_schema_path):
+            with open(visit_schema_path, 'r') as f:
+                visit_schema_sql = f.read()
+            
+            with self.engine.connect() as conn:
+                statements = [stmt.strip() for stmt in visit_schema_sql.split(';') if stmt.strip()]
+                for statement in statements:
+                    conn.execute(text(statement))
+                conn.commit()
+                
+                # Initialize visit stats if not exists
+                conn.execute(text("INSERT OR IGNORE INTO visit_stats (id, total_visits, unique_visitors) VALUES (1, 0, 0)"))
+                conn.commit()
 
 db_service_traced = DatabaseServiceWithTracing()

@@ -187,6 +187,41 @@ export function ResultsDashboard({
           >
             New Test
           </button>
+          <button
+            onClick={() => window.open(`http://localhost:8000/v1/tests/${testResult.test_id}/download`)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Download
+          </button>
+          <button
+            onClick={() => {
+              const email = prompt('Enter email address:');
+              if (email) {
+                fetch(`http://localhost:8000/v1/tests/${testResult.test_id}/email?email=${encodeURIComponent(email)}`, { method: 'POST' })
+                  .then(() => alert('Result sent to email!'))
+                  .catch(() => alert('Failed to send email'));
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Email
+          </button>
         </div>
       </div>
 

@@ -121,7 +121,55 @@ async def get_load_test_status(test_id: str):
         raise
     except Exception as e:
         logger.error("load_test_status_fetch_failed", test_id=test_id, error=str(e))
+@router.get("/{test_id}/download")
+async def download_test_result(test_id: str):
+    """Download test result as JSON"""
+    from fastapi.responses import JSONResponse
+    
+    try:
+        result = await load_test_service.get_test_result(test_id)
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Load test {test_id} not found"
+            )
+        
+        return JSONResponse(
+            content=result,
+            headers={"Content-Disposition": f"attachment; filename=load_test_{test_id}.json"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch test status: {str(e)}"
+            detail=f"Failed to download test result: {str(e)}"
+        )
+
+@router.post("/{test_id}/email")
+async def email_test_result(test_id: str, email: str):
+    """Email test result (mock implementation)"""
+    try:
+        result = await load_test_service.get_test_result(test_id)
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Load test {test_id} not found"
+            )
+        
+        # Mock email sending - in production, use actual email service
+        print(f"MOCK EMAIL: Sending test result {test_id} to {email}")
+        print(f"Result summary: {result.get('succeeded', 0)} succeeded, {result.get('failed', 0)} failed")
+        
+        return {"message": f"Test result sent to {email}"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to email test result: {str(e)}"
         )
