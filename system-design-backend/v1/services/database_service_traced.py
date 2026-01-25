@@ -10,11 +10,13 @@ from models.tracing.trace_models import EventType
 T = TypeVar('T')
 
 class DatabaseServiceWithTracing:
-    def __init__(self, host: str, password: str, database: str, username: str, port: int = 5432):
-        self.engine = create_engine(f"postgresql://{username}:{password}@{host}:{port}/{database}")
+    def __init__(self):
+        # Use SQLite instead of PostgreSQL
+        db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'load_test.db')
+        self.engine = create_engine(f"sqlite:///{db_path}")
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.init_db()
-        logger.info("Database initialized with tracing")
+        logger.info("SQLite database initialized with tracing")
     
     def get_session(self) -> Session:
         return self.SessionLocal()
@@ -58,22 +60,27 @@ class DatabaseServiceWithTracing:
             return obj
 
     def init_db(self):
-        schema_path = os.path.join(os.path.dirname(__file__), '../../schema.sql')
+        # Initialize main schema
+        schema_path = os.path.join(os.path.dirname(__file__), '../../sqlite_schema.sql')
         if os.path.exists(schema_path):
             with open(schema_path, 'r') as f:
                 schema_sql = f.read()
             
             with self.engine.connect() as conn:
-                result = conn.execute(text(
-                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'requests')"
-                ))
-                if not result.scalar():
-                    conn.execute(text(schema_sql))
-                    conn.commit()
+                conn.execute(text(schema_sql))
+                conn.commit()
+        
+        # Initialize load test schema
+        load_test_schema_path = os.path.join(os.path.dirname(__file__), '../../sqlite_load_test_schema.sql')
+        if os.path.exists(load_test_schema_path):
+            with open(load_test_schema_path, 'r') as f:
+                load_test_schema_sql = f.read()
+            
+            with self.engine.connect() as conn:
+                # Execute each statement separately for SQLite
+                statements = [stmt.strip() for stmt in load_test_schema_sql.split(';') if stmt.strip()]
+                for statement in statements:
+                    conn.execute(text(statement))
+                conn.commit()
 
-db_service_traced = DatabaseServiceWithTracing(
-    host="localhost",
-    password="password",
-    username="postgres",
-    database="system-design-playground"
-)
+db_service_traced = DatabaseServiceWithTracing()

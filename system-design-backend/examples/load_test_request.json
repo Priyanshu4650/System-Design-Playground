@@ -1,0 +1,27 @@
+{
+  "config": {
+    "total_requests": 1000,
+    "burst_mode": false,
+    "concurrency_limit": 50,
+    "payload_strategy": "randomized",
+    "base_payload": {
+      "rate_of_requests": 10,
+      "number_of_requests": 100,
+      "retries_enabled": true,
+      "rate_limiting": 100,
+      "rate_limiting_algo": "sliding_window",
+      "cache_enabled": true,
+      "cache_ttl": 300,
+      "db_latency": 50
+    },
+    "retries_enabled": true,
+    "idempotency_enabled": true,
+    "failure_injection": {
+      "enabled": true,
+      "failure_rate": 0.05,
+      "latency_min_ms": 10,
+      "latency_max_ms": 100,
+      "timeout_seconds": 5.0
+    }
+  }
+}

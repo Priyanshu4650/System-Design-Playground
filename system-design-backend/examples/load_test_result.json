@@ -1,0 +1,16 @@
+{
+  "test_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "total_requests": 1000,
+  "succeeded": 950,
+  "failed": 30,
+  "rate_limited": 20,
+  "duplicates": 0,
+  "retries_total": 45,
+  "avg_latency_ms": 125.5,
+  "p95_latency_ms": 280.0,
+  "p99_latency_ms": 450.0,
+  "start_time": "2024-01-15T10:30:00Z",
+  "end_time": "2024-01-15T10:32:30Z",
+  "duration_sec": 150.0
+}
