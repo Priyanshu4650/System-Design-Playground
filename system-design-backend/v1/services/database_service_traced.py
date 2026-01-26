@@ -9,8 +9,9 @@ T = TypeVar('T')
 
 class DatabaseServiceWithTracing:
     def __init__(self):
-        # Use SQLite with persistent storage in container
-        db_path = os.path.join('/app/data', 'load_test.db')
+        # Use SQLite with persistent storage
+        db_path = os.path.join(os.getcwd(), 'data', 'load_test.db')
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.engine = create_engine(f"sqlite:///{db_path}")
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.init_db()
@@ -20,12 +21,11 @@ class DatabaseServiceWithTracing:
         return self.SessionLocal()
     
     def create(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
-        # Import here to avoid circular dependency
-        from models.tracing.trace_models import EventType
-        from tracing.trace_context import TraceContext
-        
-        if TraceContext.get_request_id():
-            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "create"})
+        # Tracing commented out for Render deployment
+        # from models.tracing.trace_models import EventType
+        # from tracing.trace_context import TraceContext
+        # if TraceContext.get_request_id():
+        #     TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "create"})
         
         if session:
             session.add(obj)
@@ -39,11 +39,11 @@ class DatabaseServiceWithTracing:
             return obj
     
     def get_by_idempotency_key(self, idempotency_key: str, request_id: str = None, session: Optional[Session] = None) -> Optional[Request]:
-        from models.tracing.trace_models import EventType
-        from tracing.trace_context import TraceContext
-        
-        if TraceContext.get_request_id():
-            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "get_by_idempotency_key"})
+        # Tracing commented out for Render deployment
+        # from models.tracing.trace_models import EventType
+        # from tracing.trace_context import TraceContext
+        # if TraceContext.get_request_id():
+        #     TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "get_by_idempotency_key"})
         
         if session:
             return session.query(Request).filter(Request.idempotency_key == idempotency_key).first()
@@ -51,11 +51,11 @@ class DatabaseServiceWithTracing:
             return db.query(Request).filter(Request.idempotency_key == idempotency_key).first()
     
     def query(self, model_class: Type[T], request_id: str = None, session: Optional[Session] = None) -> List[T]:
-        from models.tracing.trace_models import EventType
-        from tracing.trace_context import TraceContext
-        
-        if TraceContext.get_request_id():
-            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "query"})
+        # Tracing commented out for Render deployment
+        # from models.tracing.trace_models import EventType
+        # from tracing.trace_context import TraceContext
+        # if TraceContext.get_request_id():
+        #     TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "query"})
         
         if session:
             return session.query(model_class).all()
@@ -63,11 +63,11 @@ class DatabaseServiceWithTracing:
             return db.query(model_class).all()
     
     def update(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
-        from models.tracing.trace_models import EventType
-        from tracing.trace_context import TraceContext
-        
-        if TraceContext.get_request_id():
-            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "update"})
+        # Tracing commented out for Render deployment
+        # from models.tracing.trace_models import EventType
+        # from tracing.trace_context import TraceContext
+        # if TraceContext.get_request_id():
+        #     TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "update"})
         
         if session:
             session.merge(obj)
