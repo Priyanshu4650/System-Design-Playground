@@ -11,12 +11,12 @@ T = TypeVar('T')
 
 class DatabaseServiceWithTracing:
     def __init__(self):
-        # Use SQLite instead of PostgreSQL
-        db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'load_test.db')
+        # Use SQLite with persistent storage in container
+        db_path = os.path.join('/app/data', 'load_test.db')
         self.engine = create_engine(f"sqlite:///{db_path}")
         self.SessionLocal = sessionmaker(bind=self.engine)
         self.init_db()
-        logger.info("SQLite database initialized with tracing")
+        logger.info(f"SQLite database initialized at {db_path}")
     
     def get_session(self) -> Session:
         return self.SessionLocal()
