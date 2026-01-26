@@ -1,7 +1,6 @@
 import contextvars
 from typing import Optional, Dict, Any
 from models.tracing.trace_models import EventType
-from tracing.trace_storage import trace_storage
 
 # Context variable for request tracing
 _request_context: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar('request_id', default=None)
@@ -24,6 +23,8 @@ class TraceContext:
         """Add event to current trace"""
         request_id = cls.get_request_id()
         if request_id:
+            # Import here to avoid circular dependency
+            from tracing.trace_storage import trace_storage
             trace_storage.append_event(request_id, event_type, metadata)
     
     def __init__(self, request_id: str, request_metadata: Dict[str, Any] = None):
@@ -32,6 +33,9 @@ class TraceContext:
         self.token = None
     
     def __enter__(self):
+        # Import here to avoid circular dependency
+        from tracing.trace_storage import trace_storage
+        
         # Set context and create trace
         self.token = _request_context.set(self.request_id)
         trace_storage.create_trace(self.request_id, self.request_metadata)
@@ -39,6 +43,9 @@ class TraceContext:
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # Import here to avoid circular dependency
+        from tracing.trace_storage import trace_storage
+        
         # Complete trace
         if exc_type:
             trace_storage.append_event(

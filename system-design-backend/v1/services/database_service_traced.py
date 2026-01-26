@@ -4,8 +4,6 @@ from typing import TypeVar, Type, List, Optional
 import os
 from v1.models.request import Request
 from v1.services.observability import logger
-from tracing.trace_decorators import trace_operation
-from models.tracing.trace_models import EventType
 
 T = TypeVar('T')
 
@@ -21,8 +19,14 @@ class DatabaseServiceWithTracing:
     def get_session(self) -> Session:
         return self.SessionLocal()
     
-    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "create"})
     def create(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
+        # Import here to avoid circular dependency
+        from models.tracing.trace_models import EventType
+        from tracing.trace_context import TraceContext
+        
+        if TraceContext.get_request_id():
+            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "create"})
+        
         if session:
             session.add(obj)
             session.commit()
@@ -34,22 +38,37 @@ class DatabaseServiceWithTracing:
             db.refresh(obj)
             return obj
     
-    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "get_by_idempotency_key"})
     def get_by_idempotency_key(self, idempotency_key: str, request_id: str = None, session: Optional[Session] = None) -> Optional[Request]:
+        from models.tracing.trace_models import EventType
+        from tracing.trace_context import TraceContext
+        
+        if TraceContext.get_request_id():
+            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "get_by_idempotency_key"})
+        
         if session:
             return session.query(Request).filter(Request.idempotency_key == idempotency_key).first()
         with self.get_session() as db:
             return db.query(Request).filter(Request.idempotency_key == idempotency_key).first()
     
-    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "query"})
     def query(self, model_class: Type[T], request_id: str = None, session: Optional[Session] = None) -> List[T]:
+        from models.tracing.trace_models import EventType
+        from tracing.trace_context import TraceContext
+        
+        if TraceContext.get_request_id():
+            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "query"})
+        
         if session:
             return session.query(model_class).all()
         with self.get_session() as db:
             return db.query(model_class).all()
     
-    @trace_operation(EventType.DB_CALL_STARTED, lambda *args, **kwargs: {"operation": "update"})
     def update(self, obj: T, request_id: str = None, session: Optional[Session] = None) -> T:
+        from models.tracing.trace_models import EventType
+        from tracing.trace_context import TraceContext
+        
+        if TraceContext.get_request_id():
+            TraceContext.trace_event(EventType.DB_CALL_STARTED, {"operation": "update"})
+        
         if session:
             session.merge(obj)
             session.commit()
