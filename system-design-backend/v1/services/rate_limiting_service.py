@@ -1,6 +1,5 @@
 import time
 from enum import Enum
-from v1.services.redis_service import redis_service
 from v1.services.observability import logger
 
 class WindowType(Enum):
@@ -9,11 +8,20 @@ class WindowType(Enum):
 
 class RateLimitingService:
     def __init__(self):
-        self.redis = redis_service
-        logger.info("rate limiting service initialized")
+        try:
+            from v1.services.redis_service import redis_service
+            self.redis = redis_service
+            self.enabled = redis_service.connected
+        except Exception:
+            self.redis = None
+            self.enabled = False
+        logger.info(f"rate limiting service initialized, enabled: {self.enabled}")
     
     def is_allowed(self, client_id: str, max_requests: int, time_window: int, 
                    window_type: WindowType = WindowType.FIXED) -> bool:
+        if not self.enabled:
+            return True  # Allow all requests if Redis unavailable
+        
         if window_type == WindowType.FIXED:
             return self._fixed_window_check(client_id, max_requests, time_window)
         else:

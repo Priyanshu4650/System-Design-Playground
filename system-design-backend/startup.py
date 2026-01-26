@@ -15,11 +15,14 @@ def initialize_system():
         logger.info("initializing core services...")
         
         # Redis Service
-        from v1.services.redis_service import redis_service
-        if redis_service.connected:
-            logger.info("✓ redis service ready")
-        else:
-            logger.warning("⚠ redis service unavailable, running without cache")
+        try:
+            from v1.services.redis_service import redis_service
+            if redis_service.connected:
+                logger.info("✓ redis service ready")
+            else:
+                logger.warning("⚠ redis service unavailable, running without cache")
+        except Exception as e:
+            logger.warning("⚠ redis service failed to initialize, running without cache", error=str(e))
         
         # Database Service  
         from v1.services.database_service_traced import db_service_traced
@@ -30,32 +33,50 @@ def initialize_system():
         # logger.info("✓ cache service ready")
         
         # Rate Limiting Service
-        from v1.services.rate_limiting_service import rate_limiting_service
-        logger.info("✓ rate limiting service ready")
+        try:
+            from v1.services.rate_limiting_service import rate_limiting_service
+            logger.info("✓ rate limiting service ready")
+        except Exception as e:
+            logger.warning("⚠ rate limiting service failed, running without rate limiting", error=str(e))
         
         # Idempotency Service
-        from v1.services.idempotency_service import idempotency_service
-        logger.info("✓ idempotency service ready")
+        try:
+            from v1.services.idempotency_service import idempotency_service
+            logger.info("✓ idempotency service ready")
+        except Exception as e:
+            logger.warning("⚠ idempotency service failed, running without idempotency", error=str(e))
         
         # Tracing Services
-        from tracing.trace_storage import trace_storage
-        logger.info("✓ trace storage ready")
+        try:
+            from tracing.trace_storage import trace_storage
+            logger.info("✓ trace storage ready")
+        except Exception as e:
+            logger.warning("⚠ trace storage failed, running without tracing", error=str(e))
         
         # Configuration
-        from config.failure_injection import config
-        logger.info("✓ failure injection config loaded")
+        try:
+            from config.failure_injection import config
+            logger.info("✓ failure injection config loaded")
+        except Exception as e:
+            logger.warning("⚠ failure injection config failed, running without failure injection", error=str(e))
         
         # Middleware
         logger.info("initializing middleware...")
-        from middleware.failure_injection import INJECTED_FAILURES, DB_LATENCY_HISTOGRAM
-        from middleware.retry import RETRY_ATTEMPTS, FINAL_FAILURES
-        logger.info("✓ failure injection middleware ready")
-        logger.info("✓ retry middleware ready")
+        try:
+            from middleware.failure_injection import INJECTED_FAILURES, DB_LATENCY_HISTOGRAM
+            from middleware.retry import RETRY_ATTEMPTS, FINAL_FAILURES
+            logger.info("✓ failure injection middleware ready")
+            logger.info("✓ retry middleware ready")
+        except Exception as e:
+            logger.warning("⚠ middleware failed, running without middleware", error=str(e))
         
         # Observability
         logger.info("initializing observability...")
-        from v1.services.observability import REQUEST_COUNT, REQUEST_DURATION, ACTIVE_REQUESTS
-        logger.info("✓ prometheus metrics ready")
+        try:
+            from v1.services.observability import REQUEST_COUNT, REQUEST_DURATION, ACTIVE_REQUESTS
+            logger.info("✓ prometheus metrics ready")
+        except Exception as e:
+            logger.warning("⚠ prometheus metrics failed, running without metrics", error=str(e))
         logger.info("✓ structured logging ready")
         
         startup_duration = time.time() - start_time
@@ -80,15 +101,7 @@ def initialize_system():
 def log_system_status():
     """Log current system status"""
     try:
-        from config.failure_injection import config
-        from v1.services.observability import ACTIVE_REQUESTS
-        
-        logger.info("=== SYSTEM STATUS ===",
-                   failure_injection_enabled=config.FAILURE_INJECTION_ENABLED,
-                   failure_rate=config.FAILURE_RATE,
-                   active_requests=ACTIVE_REQUESTS._value._value if hasattr(ACTIVE_REQUESTS, '_value') else 0,
-                   prometheus_metrics_port=8001)
-        
+        logger.info("=== SYSTEM STATUS ===", status="ready")
     except Exception as e:
         logger.error("failed to log system status", error=str(e))
 

@@ -1,21 +1,28 @@
 from typing import Optional, Dict, Any
 from v1.services.database_service_traced import db_service_traced as db_service
-from v1.services.cache_service import cache_service
 from v1.services.observability import logger
 
 class IdempotencyService:
     def __init__(self):
-        self.cache = cache_service
+        try:
+            from v1.services.cache_service import cache_service
+            self.cache = cache_service
+            self.cache_enabled = True
+        except Exception:
+            self.cache = None
+            self.cache_enabled = False
         self.db = db_service
-        logger.info("idempotency service initialized")
+        logger.info(f"idempotency service initialized, cache enabled: {self.cache_enabled}")
 
     def _get_cache_key(self, idempotency_key: str) -> str:
         """Generate cache key for idempotency"""
-        return self.cache._generate_cache_key("idempotency", idempotency_key)
+        if self.cache:
+            return self.cache._generate_cache_key("idempotency", idempotency_key)
+        return f"idempotency:{idempotency_key}"
 
     def get_cached_response(self, idempotency_key: str, cache_enabled: bool = True) -> Optional[Dict[str, Any]]:
         """Check Redis cache for existing response"""
-        if not cache_enabled:
+        if not cache_enabled or not self.cache_enabled or not self.cache:
             return None
         
         cache_key = self._get_cache_key(idempotency_key)
@@ -29,7 +36,7 @@ class IdempotencyService:
     def get_response_with_read_through(self, idempotency_key: str, cache_enabled: bool = True, 
                                      cache_ttl: int = 300) -> Optional[Dict[str, Any]]:
         """Get response using read-through cache pattern"""
-        if not cache_enabled:
+        if not cache_enabled or not self.cache_enabled or not self.cache:
             # Direct database lookup if cache disabled
             existing_request = self.db.get_by_idempotency_key(idempotency_key)
             if existing_request:
@@ -64,7 +71,7 @@ class IdempotencyService:
     def cache_response(self, idempotency_key: str, response_data: Dict[str, Any], 
                       cache_enabled: bool = True, cache_ttl: int = 300):
         """Cache response data with failure handling"""
-        if not cache_enabled:
+        if not cache_enabled or not self.cache_enabled or not self.cache:
             return
         
         cache_key = self._get_cache_key(idempotency_key)
@@ -75,11 +82,15 @@ class IdempotencyService:
     
     def invalidate_response(self, idempotency_key: str) -> bool:
         """Invalidate cached response for specific idempotency key"""
+        if not self.cache_enabled or not self.cache:
+            return True
         cache_key = self._get_cache_key(idempotency_key)
         return self.cache.delete(cache_key)
     
     def invalidate_all_responses(self) -> int:
         """Invalidate all cached idempotency responses"""
+        if not self.cache_enabled or not self.cache:
+            return 0
         pattern = "idempotency:*"
         return self.cache.invalidate_pattern(pattern)
 
