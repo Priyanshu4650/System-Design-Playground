@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TestConfigForm } from './TestConfigForm.js';
 import { ResultsDashboard } from './ResultsDashboard.js';
@@ -14,8 +14,6 @@ const queryClient = new QueryClient({
 });
 
 function LoadTestApp() {
-  const [visitStats, setVisitStats] = useState({ total_visits: 0, unique_visitors: 0 });
-  
   const {
     testId,
     testResult,
@@ -34,9 +32,6 @@ function LoadTestApp() {
   useEffect(() => {
     // Track visit on page load
     fetch('http://localhost:8000/v1/visits/track', { method: 'POST' })
-      .then(() => fetch('http://localhost:8000/v1/visits/stats'))
-      .then(res => res.json())
-      .then(setVisitStats)
       .catch(console.error);
   }, []);
 

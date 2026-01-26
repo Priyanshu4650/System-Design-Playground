@@ -1,4 +1,3 @@
-import React from 'react';
 import { type TestResult } from './types';
 import { Charts } from './Charts';
 

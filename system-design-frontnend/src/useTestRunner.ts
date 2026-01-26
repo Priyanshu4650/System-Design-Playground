@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from './api';
-import { type LoadTestConfig, type TestResult } from './types';
+import { type LoadTestConfig } from './types';
 
 export function useTestRunner() {
   const [testId, setTestId] = useState<string | null>(null);

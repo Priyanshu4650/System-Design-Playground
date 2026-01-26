@@ -1,4 +1,3 @@
-import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminPage } from './AdminPage.js';
 import App from './App.js';
