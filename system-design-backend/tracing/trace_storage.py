@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from models.tracing.trace_models import TraceEvent, RequestTrace, EventType
 from v1.services.redis_service import redis_service
-from v1.services.database_service import db_service
+from v1.services.database_service_traced import db_service_traced as db_service
 from v1.services.observability import logger
 from prometheus_client import Counter, Histogram
 import uuid

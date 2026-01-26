@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import hashlib
 import json
-from v1.services.database_service import db_service
+from v1.services.database_service_traced import db_service_traced as db_service
 from v1.services.idempotency_service_enhanced import idempotency_service
 from v1.models.request import Request
 from v1.services.observability import logger, log_request

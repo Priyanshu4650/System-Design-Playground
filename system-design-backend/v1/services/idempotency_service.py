@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from v1.services.database_service import db_service
+from v1.services.database_service_traced import db_service_traced as db_service
 from v1.services.cache_service import cache_service
 from v1.services.observability import logger
 
