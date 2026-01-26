@@ -56,7 +56,7 @@ function LoadTestApp() {
             Configure and run backend-driven load tests
           </p>
           <div style={{ fontSize: '14px', color: '#9ca3af', marginTop: '8px' }}>
-            <a href="/admin" style={{ color: '#3b82f6', textDecoration: 'none' }}>Admin</a>
+            <a href="/System-Design-Playground/admin" style={{ color: '#3b82f6', textDecoration: 'none' }}>Admin</a>
           </div>
         </header>
 

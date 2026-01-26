@@ -12,9 +12,16 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  // Handle GitHub Pages routing
+  const search = window.location.search;
+  if (search.startsWith('?/')) {
+    const path = search.slice(2);
+    window.history.replaceState(null, '', path || '/');
+  }
+  
   const path = window.location.pathname;
   
-  if (path === '/admin') {
+  if (path.includes('/admin') || path === '/System-Design-Playground/admin') {
     return <AdminPage />;
   }
   
