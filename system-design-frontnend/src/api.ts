@@ -1,6 +1,6 @@
 import { type LoadTestConfig, type StartTestRequest, type StartTestResponse, type TestResult, type TestStatus } from './types';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://system-design-playground.onrender.com';
 
 class ApiError extends Error {
   status: number;
