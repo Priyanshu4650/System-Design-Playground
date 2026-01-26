@@ -1,12 +1,40 @@
 version: '3.8'
 
 services:
-  load-test-backend:
+  redis:
+    image: redis:7-alpine
+    container_name: system-design-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
     build: .
+    container_name: system-design-backend
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - .:/app
     environment:
-      - PYTHONPATH=/app
-    restart: unless-stopped
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_PATH=/app/data/system_design.db
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  redis_data:

@@ -16,15 +16,18 @@ def initialize_system():
         
         # Redis Service
         from v1.services.redis_service import redis_service
-        logger.info("✓ redis service ready")
+        if redis_service.connected:
+            logger.info("✓ redis service ready")
+        else:
+            logger.warning("⚠ redis service unavailable, running without cache")
         
         # Database Service  
         from v1.services.database_service_traced import db_service_traced
         logger.info("✓ database service ready")
         
         # Cache Service
-        from v1.services.cache_service import cache_service
-        logger.info("✓ cache service ready")
+        # from v1.services.cache_service import cache_service
+        # logger.info("✓ cache service ready")
         
         # Rate Limiting Service
         from v1.services.rate_limiting_service import rate_limiting_service
@@ -60,7 +63,7 @@ def initialize_system():
         logger.info("=== SYSTEM STARTUP COMPLETED ===", 
                    startup_duration_ms=startup_duration * 1000,
                    services_initialized=[
-                       "redis", "database", "cache", "rate_limiting", 
+                       "redis", "database", "rate_limiting", 
                        "idempotency", "tracing", "failure_injection",
                        "retry", "observability"
                    ])
