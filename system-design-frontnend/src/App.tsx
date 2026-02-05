@@ -31,7 +31,7 @@ function LoadTestApp() {
 
   useEffect(() => {
     // Track visit on page load
-    fetch('http://localhost:8000/v1/visits/track', { method: 'POST' })
+    fetch('https://system-design-playground.onrender.com/v1/visits/track', { method: 'POST' })
       .catch(console.error);
   }, []);
 

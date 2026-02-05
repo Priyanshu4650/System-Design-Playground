@@ -28,7 +28,7 @@ export function AdminPage() {
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:8000/v1/visits/admin?password=${encodeURIComponent(password)}`);
+      const response = await fetch(`https://system-design-playground.onrender.com/v1/visits/admin?password=${encodeURIComponent(password)}`);
       const data = await response.json();
       
       if (data.error) {
@@ -140,7 +140,7 @@ export function AdminPage() {
           </button>
           <button
             onClick={() => {
-              const url = `http://localhost:8000/v1/visits/admin/download?password=${encodeURIComponent('admin123')}`;
+              const url = `https://system-design-playground.onrender.com/v1/visits/admin/download?password=${encodeURIComponent('admin123')}`;
               window.open(url);
             }}
             style={{

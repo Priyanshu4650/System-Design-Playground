@@ -232,7 +232,7 @@ async def _execute_single_request(payload: PostRequestModel) -> TrafficResult:
         import httpx
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://localhost:8000/requests/",
+                "https://system-design-playground.onrender.com/requests/",
                 json=payload.dict(),
                 headers={"Idempotency-Key": request_id}
             )

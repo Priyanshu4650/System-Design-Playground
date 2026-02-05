@@ -204,7 +204,7 @@ export function ResultsDashboard({
             onClick={() => {
               const email = prompt('Enter email address:');
               if (email) {
-                fetch(`http://localhost:8000/v1/tests/${testResult.test_id}/email?email=${encodeURIComponent(email)}`, { method: 'POST' })
+                fetch(`hhttps://system-design-playground.onrender.com/v1/tests/${testResult.test_id}/email?email=${encodeURIComponent(email)}`, { method: 'POST' })
                   .then(() => alert('Result sent to email!'))
                   .catch(() => alert('Failed to send email'));
               }
